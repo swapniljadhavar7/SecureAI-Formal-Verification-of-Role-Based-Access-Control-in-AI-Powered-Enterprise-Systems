@@ -1,101 +1,58 @@
-# SecureAI: Formal Verification of Role-Based Access Control in AI-Powered Enterprise Systems
+Formal Verification of Role-Based Access Control in Enterprise Systems
 
-> **Project proposal for the Software Verification course.**
-> Dear Professor, we would like to propose the project described in this repository for the Software Verification course. We would appreciate your feedback on the topic and its suitability for the course.
+Project proposal for the Software Verification course. Dear Professor, we would like to propose the project described in this repository for the Software Verification course. We would appreciate your feedback on the topic and its suitability for the course.
 
-| | |
-|---|---|
-| **Team** | TAG |
-| **Members** | Swapnil Jadhavar (swapniljadhavar7@gmail.com), Ruchika Bhamre |
-| **Verification tool** | [Dafny](https://dafny.org) (with the Z3 SMT solver) |
-| **Repository** | [https://github.com/swapniljadhavar7/SecureAI-Formal-Verification-of-Role-Based-Access-Control-in-AI-Powered-Enterprise-Systems] |
-| **Status** | Proposal stage: starter model and first lemmas included to show feasibility |
+	
+Team	TAG
+Members	Swapnil Jadhavar, Ruchika Bhamre
+Verification tool	Dafny (with the Z3 SMT solver)
+Status	Proposal stage: no code yet, the layout in section 5 is planned
+1. Problem statement
 
----
+Enterprise systems give people access to sensitive resources such as files, records and services. Incorrect permission handling or role management can result in unauthorized access and security vulnerabilities.
 
-## 1. Problem statement
+2. Motivation
 
-Enterprise AI platforms give people access to sensitive **documents**, **datasets** and **AI models**. Incorrect permission handling or role management can result in unauthorized access and security vulnerabilities.
+Traditional testing cannot exhaustively cover every combination of users, roles, permissions and state changes. We want to use formal verification to establish machine-checked correctness guarantees for a role-based authorization system, guarantees that hold for all states, not just the ones we thought to test.
 
-## 2. Motivation
+3. Proposed work
+Design and implement a general role-based access control (RBAC) model.
+Specify the authorization rules in Dafny.
+Formally verify:
+P1 Unauthorized-access prevention (default deny; access only via a role that grants it)
+P2 Role revocation correctness (a revoked role no longer grants access, and revocation never escalates privileges)
+P3 Separation of duties (no user ever holds two conflicting roles)
+P4 Invariant preservation (every operation keeps the system in a valid state)
+Demonstrate verification of valid implementations and of deliberately faulty ones (the faulty ones must be rejected by the verifier).
+Evaluate the approach and document its limitations.
+4. Expected outcome
 
-Traditional testing cannot exhaustively cover every combination of users, roles, permissions and state changes. We want to use **formal verification** to establish *machine-checked correctness guarantees* for a role-based authorization system, guarantees that hold for **all** states, not just the ones we thought to test.
+A small, formally verified RBAC prototype, including:
 
-## 3. Proposed work
+machine-checked proofs (Dafny),
+an illustrative application,
+tests,
+technical documentation.
+5. How Dafny is used
 
-1. Design and implement a role-based access control (RBAC) model for an AI platform.
-2. Specify the authorization rules in Dafny.
-3. Formally verify:
-   - **P1 Unauthorized-access prevention** (default deny; access only via a role that grants it)
-   - **P2 Role revocation correctness** (a revoked role no longer grants access, and revocation never escalates privileges)
-   - **P3 Separation of duties** (no user ever holds two conflicting roles)
-   - **P4 Invariant preservation** (every operation keeps the system in a valid state)
-4. Demonstrate verification of **valid** implementations and of **deliberately faulty** ones (the faulty ones must be rejected by the verifier).
-5. Evaluate the approach and document its limitations.
+Dafny is a programming language with a built-in verifier. Code and specification are written together; Dafny turns them into proof obligations and the Z3 SMT solver checks them at compile time.
 
-Details of each property are in [`docs/properties.md`](docs/properties.md).
+Dafny feature	Use in this project
+Datatypes	The system state: user-to-roles map, role-to-permissions map, conflict set
+Predicates	The access decision (CanAccess) and the validity invariant (Valid)
+requires / ensures	Contracts on every operation (assign role, revoke role, grant permission)
+Lemmas	Properties that span operations, e.g. revocation never escalates privileges
+Verifier errors	Evidence that the faulty implementations are rejected
+dafny run / dafny test	The demo application and the runtime tests
+6. Model at a glance
+Resources: anything that needs protection, identified by name (e.g. file:payroll, service:billing).
+Permission: an action (Read, Write, Execute, Approve) on a resource.
+Roles grant sets of permissions; users hold sets of roles.
+Conflicts are pairs of roles that no single user may hold together (separation of duties), e.g. Requester and Approver: whoever submits a request must not approve it.
+Access decision: allow iff one of the user's roles grants the permission; deny otherwise.
 
-## 4. Expected outcome
-
-A small, formally verified RBAC prototype for an enterprise AI platform, including:
-
-- machine-checked proofs (Dafny),
-- an illustrative application (`src/Demo.dfy`),
-- tests (`tests/RbacTests.dfy`),
-- technical documentation (`docs/`).
-
-## 5. Repository layout
-
-```
-.
-├── README.md                     <- this proposal
-├── PROPOSAL.md                   <- proposal letter, scope, milestones, risks
-├── docs/
-│   ├── properties.md             <- properties to be verified, mapped to lemmas
-│   ├── plan.md                   <- milestones and evaluation criteria
-│   └── limitations.md            <- what the proofs do and do not guarantee
-├── src/
-│   ├── Rbac.dfy                  <- RBAC model, operations, invariants, lemmas
-│   ├── Platform.dfy              <- example AI-platform policy (roles, perms, conflicts)
-│   └── Demo.dfy                  <- runnable illustrative application
-├── examples/faulty/
-│   └── FaultyRbac.dfy            <- deliberately buggy versions (expected to FAIL)
-├── tests/
-│   └── RbacTests.dfy             <- runtime tests (dafny test)
-├── scripts/check.sh              <- verify + test + check faulty code is rejected
-└── .github/workflows/verify.yml  <- CI
-```
-
-## 6. Quick start
-
-Install [Dafny 4.x](https://github.com/dafny-lang/dafny/releases), then:
-
-```bash
-./scripts/check.sh                 # verify, test, and confirm faulty code is rejected
-dafny verify src/Rbac.dfy          # verify only the core model
-dafny run src/Demo.dfy             # run the demo application
-dafny test tests/RbacTests.dfy     # run runtime tests
-```
-
-## 7. Model at a glance
-
-- **Resources**: documents, datasets and models, identified by name (e.g. `dataset:customers`, `model:churn`).
-- **Permission**: an *action* (`Read`, `Write`, `Invoke`, `Train`, `Approve`) on a resource.
-- **Roles** grant sets of permissions; **users** hold sets of roles.
-- **Conflicts** are pairs of roles that no single user may hold together (separation of duties), e.g. `DataScientist` and `ModelApprover`: whoever trains a model must not approve it.
-- **Access decision**: allow iff one of the user's roles grants the permission; deny otherwise.
-
-## 8. Limitations (summary)
-
-The proofs cover the *model and its Dafny implementation*, not authentication, networking, persistence, concurrency or a deployed AI system. See [`docs/limitations.md`](docs/limitations.md).
-
-## 9. Team
-
-| Name | Contact |
-|---|---|
-| Swapnil Jadhavar | swapniljadhavar7@gmail.com |
-| Ruchika Bhamre | [email] |
-
-## License
-
-MIT, see [`LICENSE`](LICENSE).
+Readme
+MD
+Web search
+Memory
+Read · Software Verification Project
