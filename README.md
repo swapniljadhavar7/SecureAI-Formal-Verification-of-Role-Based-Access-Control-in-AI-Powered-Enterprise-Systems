@@ -6,7 +6,7 @@ Project proposal for the Software Verification course. Dear Professor, we would 
 Team	TAG
 Members	Swapnil Jadhavar, Ruchika Bhamre
 Verification tool	Dafny (with the Z3 SMT solver)
-Status	Proposal stage: no code yet, the layout in section 5 is planned
+Status	Proposal stage: no code yet, the layout is is planned
 1. Problem statement
 
 Enterprise systems give people access to sensitive resources such as files, records and services. Incorrect permission handling or role management can result in unauthorized access and security vulnerabilities.
